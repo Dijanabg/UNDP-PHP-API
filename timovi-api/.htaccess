@@ -3,8 +3,9 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f 
 
+RewriteRule ^tasks  controler/task.php [L] #ovo mora prvo inace ne radi get po id
 RewriteRule ^tasks/([0-9]+)$ controler/task.php?taksid=$1 [L]
-RewriteRule ^tasks  controler/task.php [L]
+
 
 #http://localhost/timovi-api/controler/task.php?taskid=1
 #http://localhost/timovi-api/tasks/1
