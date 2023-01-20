@@ -1,0 +1,12 @@
+<?php
+//folderi: controler, model, test
+//model/Response.php kreiramo klasu za ispisivanje responsea
+//test/responseTest.php proveravamo da li nam response radi i nista vise(ovde require_once "../model/Response.php)
+//controler/db.php kreiramo konekciju na bazu kao klasu sa static propertijima i metodama
+//model/Task.php klasa sa propertijima iz baze i seterima i geterima i metodom da nam vrati niz objekat 
+//test/taskTest ovde proveravamo da li nam task radi i nista vise (ovde require_once "../model/Task.php)
+//controler/task.php ovde pisemo sve ostalo za get post patch delete post(ovde require "db.php" require_once "../model/Response.php require_once "../model/Task.php)
+//**prvo kreiramo konekciju na bazu
+//zatim radimo za GET metodu za vracanje po jednom id sa if (isset($_GET['taskid'])), i provera da li je task id nije broj ili je prazno, nismo radili da vrati sve rekao nema vremena 
+//zatim proveravamo da li je zaista poslata metoda GET a ne post ilineka druga sa if ($_SERVER['REQUEST_METHOD'] === "GET") zovemo iz baze, else ako je rowCount ==0 ispisujemo response za error
+//  */
