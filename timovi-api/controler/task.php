@@ -58,11 +58,72 @@ if (isset($_GET['taskid'])) {
         $response->setData($returnData); //vraca podatke odnosno niz returnData
         $response->send();
         exit;
+    }
+    //ovde pisemo delete jer je u glavnom ifu gde je get=taskid
+    elseif ($_SERVER['REQUEST_METHOD'] === "DELETE") {
+        $query = "DELETE FROM timovi WHERE timId=$taksid";
+        $result = $conn->query($query);
+        //proveravamo moguce greske, recimo da u tabeli nema tog id
+        $num_rows->$conn->affected_rows;
+        if ($num_rows === 0) {
+            $response = new Response();
+            $response->setHttpStatusCode(404);
+            $response->setSuccess(false);
+            $response->addMessage('Taks not found.');
+            $response->send();
+            exit;
+        }
+        //kreiramo response za pozitivan
+        $response = new Response();
+        $response->setHttpStatusCode(200);
+        $response->setSuccess(true);
+        $response->addMessage('Taks delete');
+        $response->send();
+        exit;
     } else {
         $response = new Response();
         $response->setHttpStatusCode(405);
         $response->setSuccess(false);
         $response->addMessage('Request method not allowed');
+        $response->send();
+        exit;
+    }
+} //ovde pisemo GET all da ispise sve taskove, zato sto nam ne treba id
+elseif (empty($_GET)) {
+    if ($_SERVER['REQUEST_METHOD'] === "GET") {
+        $query = "SELECT * FROM timovi";
+        $result = $conn->query($query);
+
+        $rowCount = $result->num_rows;
+        //sta ako je broj redova koji je vracen jednak nuli
+        if ($rowCount === 0) {
+            $response = new Response();
+            $response->setHttpStatusCode(404);
+            $response->setSuccess(false);
+            $response->addMessage('Task not found');
+            $response->send();
+            exit;
+        }
+        //kreiramo response za pozitivan kao i kod GET po id
+        while ($row = $result->fetch_assoc()) {
+            $task = new Task($row['timID'], $row['nazivTima'], $row['drzava'], $row['brojTitula'], $row['godinaOsnivanja']);
+            $taskArray[] = $task->returnTaskArray();
+        }
+        //kreiramo niz koji cemo vratiti korisniku
+        $returnData = array();
+        $returnData['row_returned'] = $rowCount;
+        $returnData['tasks'] = $taskArray; //vrati mi podatke (objekte)
+        $response = new Response();
+        $response->setHttpStatusCode(200);
+        $response->setSuccess(true);
+        $response->setData($returnData);
+        $response->send();
+        exit;
+    } else {
+        $response = new Response();
+        $response->setHttpStatusCode(405);
+        $response->setSuccess(false);
+        $response->addMessage('Request method not allowed.');
         $response->send();
         exit;
     }
