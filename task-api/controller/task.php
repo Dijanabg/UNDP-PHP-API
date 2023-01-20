@@ -45,7 +45,7 @@ if (isset($_GET['taskid'])) {
 
         // while ($row = $result->fetch_assoc()) {
         $row = $result->fetch_assoc();
-        $task = new Task($row['id'], $row['title'], $row['description'], $row['deadline'], $row['completed']);
+        $task = new Task($row['id'], $row['title'], $row['description'], $row['deadline'], $row['complited']);
         $taskArray[] = $task->returnTaskArray();
         // }
 
