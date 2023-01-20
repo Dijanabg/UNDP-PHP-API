@@ -72,7 +72,7 @@ class Task
     public function returnTaskArray()
     {
         $task = array();
-        $task['timId'] = $this->getTimID();
+        $task['timID'] = $this->getTimID();
         $task['nazivTima'] = $this->getNazivTima();
         $task['drzava'] = $this->getDrzava();
         $task['brojTitula'] = $this->getBrojTitula();
