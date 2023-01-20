@@ -83,6 +83,15 @@ if (isset($_GET['timID'])) {
     }
     //ovde pisemo kod za patch
     elseif ($_SERVER['REQUEST_METHOD'] === "PATCH") {
+
+        if ($_SERVER['CONTENT_TYPE'] !== 'application/json') {
+            $response = new Response();
+            $response->setHttpStatusCode(400);
+            $response->setSuccess(false);
+            $response->addMessage('Content type header not set to JSON');
+            $response->send();
+            exit;
+        }
         //treba da nadjemo id elementa koji zelimo da izmenimo
         $rowPatchData = file_get_contents('php://input'); //kupimo podatke iz input polja
         if (!$jsonData = json_decode($rowPatchData)) { //probamo da dekodiramo podatke u json, provera validnosti
@@ -95,7 +104,7 @@ if (isset($_GET['timID'])) {
             exit;
         }
         //greska ukoliko ne postoji taj id element
-        $query = "SELECT * FROM tim WHERE timId= $taskid";
+        $query = "SELECT * FROM tim WHERE timID= $taskid";
         $result = $conn->query($query);
 
         $rowCount = $result->num_rows;
@@ -109,10 +118,10 @@ if (isset($_GET['timID'])) {
             exit;
         }
         //ako je pozitivno stavljamo da po difoltu nijedan nije za azuriranje
-        $nazivTima = false;
-        $drzava = false;
-        $brojTitula = false;
-        $godinaOsnivanja = false;
+        $nazivTima_update = false;
+        $drzava_update = false;
+        $brojTitula_update = false;
+        $godinaOsnivanja_update = false;
         //polja za azuriranje
         $queryFields = "";
         //dekodiranjem smo pretvorili u json objekat
@@ -144,13 +153,13 @@ if (isset($_GET['timID'])) {
         }
         //hvatamo podatke za ispis iz baze
         $queryFields = rtrim($queryFields, ","); //uklanja poslednji zarez u nizu $queryFields
-        $queryString = "UPDATE tasks SET $queryFields WHERE id=$taskid";
+        $queryString = "UPDATE tim SET $queryFields WHERE timID=$taskid";
         $result2 = $conn->query($queryString);
         //sta ako nije lepo azuriran red u tabeli
 
         $row = $result->fetch_assoc();
 
-        $task = new Task($row['timId'], $row['nazivTima'], $row['drzava'], $row['brojTitula'], $row['godinaOsnivanja']);
+        $task = new Task($row['timID'], $row['nazivTima'], $row['drzava'], $row['brojTitula'], $row['godinaOsnivanja']);
 
         $queryFieldsCheck = "";
         if ($nazivTima_update) {
@@ -169,7 +178,7 @@ if (isset($_GET['timID'])) {
             $task->setGodinaOsnivanja($jsonData->godinaOsnivanja);
             $queryFieldsCheck .= "godinaOsnivanja='{$task->getGodinaOsnivanja()}' AND ";
         }
-        $queryFieldsCheck .= "timId='{$task->getTimID()}'";
+        $queryFieldsCheck .= "timID='{$task->getTimID()}'";
 
         $query3 = "SELECT * FROM tim WHERE $queryFieldsCheck";
         $result3 = $conn->query($query3);
@@ -186,7 +195,7 @@ if (isset($_GET['timID'])) {
         //SELECT * FROM tasks WHERE nazivTima='...' AND brojTitula='...' AND ...
         //potrebno je napisati upit koji proverava da li postoji element sa propertijima iz tabele
         //ako nema vracenih redova
-        $result4 = $conn->query("SELECT * FROM tim WHERE timId=$taskid");
+        $result4 = $conn->query("SELECT * FROM tim WHERE timID=$taskid");
         $rowCount = $result4->num_rows;
         if ($rowCount === 0) {
             $response = new Response();
@@ -198,7 +207,7 @@ if (isset($_GET['timID'])) {
         }
         //ako je sve u redu
         $row = $result4->fetch_assoc(); //uzimamo podatke i smestamo u novi task ispod
-        $task = new Task($row['timId'], $row['nazivTima'], $row['drzava'], $row['brojTitula'], $row['godinaOsnivanja']);
+        $task = new Task($row['timID'], $row['nazivTima'], $row['drzava'], $row['brojTitula'], $row['godinaOsnivanja']);
 
         $taskArray[] = $task->returnTaskArray();
         $returnData = array();
@@ -212,6 +221,16 @@ if (isset($_GET['timID'])) {
         $response->setData($returnData);
         $response->send();
         exit;
+    } elseif ($_SERVER['REQUEST_METHOD'] === "POST") {
+
+        if ($_SERVER['CONTENT_TYPE'] !== 'application/json') {
+            $response = new Response();
+            $response->setHttpStatusCode(400);
+            $response->setSuccess(false);
+            $response->addMessage('Content type header not set to JSON');
+            $response->send();
+            exit;
+        }
     } else {
         $response = new Response();
         $response->setHttpStatusCode(405);
