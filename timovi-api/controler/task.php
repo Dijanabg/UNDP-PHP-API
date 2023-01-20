@@ -80,6 +80,71 @@ if (isset($_GET['taskid'])) {
         $response->addMessage('Taks delete');
         $response->send();
         exit;
+    }
+    //ovde pisemo kod za patch
+    elseif ($_SERVER['REQUEST_METHOD'] === "PATCH") {
+        //treba da nadjemo id elementa koji zelimo da izmenimo
+        $rowPatchData = file_get_contents('php://input'); //kupimo podatke iz input polja
+        if (!$jsonData = json_decode($rowPatchData)) { //probamo da dekodiramo podatke u json, provera validnosti
+            //ako podaci nisu dobri ili su null treba da baci error
+            $response = new Response();
+            $response->setHttpStatusCode(400);
+            $response->setSuccess(false);
+            $response->addMessage('Request body not valid json');
+            $response->send();
+            exit;
+        }
+        //greska ukoliko ne postoji taj id element
+        $query = "SELECT * FROM timovi WHERE timId= $taskid";
+        $result = $conn->query($query);
+
+        $rowCount = $result->num_rows;
+        //sta ako je broj redova koji je vracen jednak nuli
+        if ($rowCount === 0) {
+            $response = new Response();
+            $response->setHttpStatusCode(404);
+            $response->setSuccess(false);
+            $response->addMessage('No task found to update');
+            $response->send();
+            exit;
+        }
+        //ako je pozitivno stavljamo da po difoltu nijedan nije za azuriranje
+        $nazivTima = false;
+        $drzava = false;
+        $brojTitula = false;
+        $godinaOsnivanja = false;
+        //polja za azuriranje
+        $queryFields = "";
+        //dekodiranjem smo pretvorili u json objekat
+        //podaci koje pratimo da li su azurirani
+        if (isset($jsonData->nazivTima)) {
+            $nazivTima_update = true;
+            $queryFields .= "nazivTima='$jsonData->nazivTima',";
+        }
+        if (isset($jsonData->drzava)) {
+            $drzava_update = true;
+            $queryFields .= "drzava='$jsonData->drzava',";
+        }
+        if (isset($jsonData->brojTitula)) {
+            $brojTitula_update = true;
+            $queryFields .= "brojTitula='$jsonData->brojTitula',";
+        }
+        if (isset($jsonData->godinaOsnivanja)) {
+            $godinaOsnivanja_update = true;
+            $queryFields .= "godinaOsnivanja='$jsonData->godinaOsnivanja',";
+        }
+        //ako nista nije setovano za azuriranje a da ne bi izbrisao objekat
+        if ($nazivTima === false && $drzava === false && $brojTitula === false && $godinaOsnivanja === false) {
+            $response = new Response();
+            $response->setHttpStatusCode(400);
+            $response->setSuccess(false);
+            $response->addMessage("No task fields provided");
+            $response->send();
+            exit;
+        }
+        $queryFields = rtrim($queryFields, ","); //uklanja poslednji zarez u nizu $queryFields
+        $queryString = "UPDATE tasks SET $queryFields WHERE id=$taskid";
+        $result2 = $conn->query($queryString);
     } else {
         $response = new Response();
         $response->setHttpStatusCode(405);
