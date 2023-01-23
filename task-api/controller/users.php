@@ -28,7 +28,7 @@ if (!isset($jsonData->fullname) || !isset($jsonData->username) || !isset($jsonDa
     //$response->addMessage("Missing fullname, username or password");
     if (!isset($jsonData->fullname))
         $response->addMessage('Fullname filed is mandatory and must be provided');
-    if (!isset($jsonData->description))
+    if (!isset($jsonData->username))
         $response->addMessage('Username filed is mandatory and must be provided');
     if (!isset($jsonData->password))
         $response->addMessage('Password filed is mandatory and must be provided');
