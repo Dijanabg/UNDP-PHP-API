@@ -14,6 +14,7 @@ RewriteRule ^tasks/page/([0-9]+)$ controller/task.php?page=$1 [L]
 RewriteRule ^tasks/completed$ controller/task.php?completed=Y [L]
 RewriteRule ^tasks/incompleted$ controller/task.php?completed=N [L]
 RewriteRule ^tasks$ controller/task.php [L]
+RewriteRule ^users$ controller/users.php [L]
 
 
 
