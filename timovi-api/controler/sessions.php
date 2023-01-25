@@ -76,6 +76,9 @@ if (isset($_GET['sessionid'])) {
 
         if (!password_verify($password, $db_password)) {
             //implementirati loginattempts
+            $query = "UPDATE tblusers SET loginattempts = $db_loginattempts +1 WHERE  id='$db_id'";
+            $result = $conn->query($query);
+
             $response = new Response();
             $response->setHttpStatusCode(404);
             $response->setSuccess(false);
@@ -85,12 +88,50 @@ if (isset($_GET['sessionid'])) {
             exit;
         }
         //uspesan login pokrenuti sesiju
+        $accesstoken = base64_encode(bin2hex(openssl_random_pseudo_bytes(24))); //pretvaranje iz binarnog u heksadecimalni a zatim u base64 //standardan format u kome cuvamo tokene
 
+        $refreshtoken = base64_encode(bin2hex(openssl_random_pseudo_bytes(24))); //pretvaranje iz binarnog u heksadecimalni a zatim u base64 //standardan format u kome cuvamo tokene
+
+        $access_expiry = 1800; //30min u sek
+        $refresh_expiry = 1800000; // oko tri nedelje u sek
     } catch (Exception $ex) {
         $response = new Response();
         $response->setHttpStatusCode(500);
         $response->setSuccess(false);
         $response->addMessage("Error");
+
+        $response->send();
+        exit;
+    }
+    try {
+        //vracamo loginattempts na 0 kada se uloguje user
+        $query = "UPDATE tblusers SET loginattempts = 0 WHERE id=$db_id";
+        $conn->query($query);
+
+        //kreiramo sessiju
+        $query = "INSERT INTO tblsessions (userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry) VALUES ($db_id, '$accesstoken', DATE_ADD(now(), INTERVAL $access_expiry SECOND), '$refreshtoken', DATE_ADD(now(), INTERVAL $refresh_expiry SECOND))";
+        $conn->query($query);
+
+        $last_id = $conn->insert_id; //pronalazenje id sesije koja je poslednja dodata
+
+        $returnData = array();
+        $returnData['session_id'] = intval($last_id);
+        $returnData['accesstoken'] = intval($accesstoken);
+        $returnData['refreshtoken'] = intval($refreshtoken);
+
+        $response = new Response();
+        $response->setHttpStatusCode(201);
+        $response->setSuccess(true);
+        $response->addMessage("User logged in, access yoken created");
+        $response->setData($returnData);
+        $response->send();
+
+        exit;
+    } catch (Exception $ex) {
+        $response = new Response();
+        $response->setHttpStatusCode(500);
+        $response->setSuccess(false);
+        $response->addMessage("Error loggedin");
 
         $response->send();
         exit;
