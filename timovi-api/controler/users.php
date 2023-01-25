@@ -49,7 +49,7 @@ $fullname = trim($jsonData->fullname); //sklanja prazna polja sa pocetka i kraja
 $username = trim($jsonData->username);
 $password = $jsonData->password;
 try {
-    $query = "SELECT id FROM users WHERE username='$username'";
+    $query = "SELECT id FROM user WHERE username='$username'";
     $result = $conn->query($query);
     $rowCount = mysqli_num_rows($result);
     if ($rowCount !== 0) {
@@ -65,7 +65,7 @@ try {
 
     //DODAVANJE KORISNIKA
 
-    $query = "INSERT INTO users (fullname, username, password) VALUES ('$fullname', '$username', '$hashed_pass')";
+    $query = "INSERT INTO user (fullname, username, password) VALUES ('$fullname', '$username', '$hashed_pass')";
     $inserted = $conn->query($query);
 
     if ($inserted === false) {
