@@ -7,6 +7,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^tasks/([0-9]+)$ controler/task.php?timID=$1 [L]
 RewriteRule ^tasks/page/([0-9]+)$ controler/task.php?page=$1 [L]
 RewriteRule ^tasks  controler/task.php [L] #ipak ide dole
-RewriteRule ^users  controler/users.php [L] #ipak ide dole
+RewriteRule ^users  controler/users.php [L]
+RewriteRule ^sessions$ controler/sessions.php [L]
 #http://localhost/timovi-api/controler/task.php?taskid=1
 #http://localhost/timovi-api/tasks/1
