@@ -106,6 +106,7 @@ if (isset($_GET['sessionid'])) {
         $response->send();
         exit;
     }
+    $conn->begin_transaction();
     try {
         //vracamo loginattempts na 0 kada se uloguje user
         $query = "UPDATE tblusers SET loginattempts = 0 WHERE id=$db_id";
@@ -115,12 +116,14 @@ if (isset($_GET['sessionid'])) {
         $query = "INSERT INTO tblsessions (userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry) VALUES ($db_id, '$accesstoken', DATE_ADD(now(), INTERVAL $access_expiry SECOND), '$refreshtoken', DATE_ADD(now(), INTERVAL $refresh_expiry SECOND))";
         $conn->query($query);
 
+
         $last_id = $conn->insert_id; //pronalazenje id sesije koja je poslednja dodata
+        $conn->commit();
 
         $returnData = array();
         $returnData['session_id'] = intval($last_id);
-        $returnData['accesstoken'] = intval($accesstoken);
-        $returnData['refreshtoken'] = intval($refreshtoken);
+        $returnData['accesstoken'] = $accesstoken;
+        $returnData['refreshtoken'] = $refreshtoken;
 
         $response = new Response();
         $response->setHttpStatusCode(201);
@@ -131,10 +134,12 @@ if (isset($_GET['sessionid'])) {
 
         exit;
     } catch (Exception $ex) {
+        //ponistavamo promene nad bazom
+        $conn->rollback();
         $response = new Response();
         $response->setHttpStatusCode(500);
         $response->setSuccess(false);
-        $response->addMessage("Error");
+        $response->addMessage("Error logging user");
 
         $response->send();
         exit;
