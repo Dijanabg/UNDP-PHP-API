@@ -12,7 +12,67 @@ $conn = DB::connectDB();
 //tasks/1 GET **vraca tasks sa id=1
 //tasks/1 DELETE **brise tasks sa id=1
 
+if (!isset($_SERVER['HTTP_AUTHORIZATION']) || strlen($_SERVER['HTTP_AUTHORIZATION']) < 1) {
+    $response = new Response();
+    $response->setHttpStatusCode(401);
+    $response->setSuccess(false);
+    $response->addMessage('Authorization token cannot be blank or must be set');
+    $response->send();
+    exit;
+}
 
+$accesstoken = $_SERVER['HTTP_AUTHORIZATION'];
+
+try {
+    //citamo podatke user-a
+    $query = "SELECT userid, accessexpiry, loginattempts FROM user, sessions WHERE sessions.userid = user.id AND accesstoken = '$accesstoken'";
+    $result = $conn->query($query);
+
+    $rowCount = mysqli_num_rows($result);
+    if ($rowCount === 0) {
+        $response = new Response();
+        $response->setHttpStatusCode(401);
+        $response->setSuccess(false);
+        $response->addMessage('Access token not valid');
+        $response->send();
+        exit;
+    }
+
+    $row = $result->fetch_assoc();
+
+    $db_userid = $row['userid'];
+    $db_accessexpiry = $row['accessexpiry'];
+    $db_loginattempts = $row['loginattempts'];
+
+    if (strtotime($db_accessexpiry) < time()) {
+        $response = new Response();
+        $response->setHttpStatusCode(401);
+        $response->setSuccess(false);
+        $response->addMessage('Access token expired');
+        $response->send();
+        exit;
+    }
+
+    if ($db_loginattempts >= 3) {
+        $response = new Response();
+        $response->setHttpStatusCode(401);
+        $response->setSuccess(false);
+        $response->addMessage('User account is currently locked out');
+        $response->send();
+        exit;
+    }
+} catch (Exception $ex) {
+    //response
+    $response = new Response();
+    $response->setHttpStatusCode(500);
+    $response->setSuccess(false);
+    $response->addMessage('Issue during authentication');
+    $response->send();
+    exit;
+}
+
+
+// Autorizacije zavrsena
 if (isset($_GET['timID'])) {
     $taskid = $_GET['timID'];
 
@@ -276,7 +336,7 @@ if (isset($_GET['timID'])) {
         //10*(2-1) = 10
         //10*(3-1) = 20
         $offset = ($page == 1 ? 0 : $limitPerPage * ($page - 1));
-        $query = "SELECT * FROM tim limit $limitPerPage offset $offset";
+        $query = "SELECT * FROM tim WHERE userid = $db_userid limit $limitPerPage offset $offset";
         $result2 = $conn->query($query);
 
         $rowCount = $result2->num_rows;
@@ -312,7 +372,7 @@ if (isset($_GET['timID'])) {
 //ovde pisemo GET all da ispise sve taskove, zato sto nam ne treba id
 elseif (empty($_GET)) {
     if ($_SERVER['REQUEST_METHOD'] === "GET") {
-        $query = "SELECT * FROM tim";
+        $query = "SELECT * FROM tim WHERE userid = $db_userid";
         $result = $conn->query($query);
 
         $rowCount = $result->num_rows;
@@ -393,7 +453,7 @@ elseif (empty($_GET)) {
         $brojTitula = $newTask->getBrojTitula();
         $godinaOsnivanja = $newTask->getGodinaOsnivanja();
 
-        $query = "INSERT INTO tim (nazivTima, drzava, brojTitula, godinaOsnivanja) VALUES ('$nazivTima', '$drzava', '$brojTitula','$godinaOsnivanja')";
+        $query = "INSERT INTO tim (nazivTima, drzava, brojTitula, godinaOsnivanja, userid) VALUES ('$nazivTima', '$drzava', '$brojTitula','$godinaOsnivanja','$db_userid')";
         $result = $conn->query($query);
 
         $rowCount = $conn->affected_rows;

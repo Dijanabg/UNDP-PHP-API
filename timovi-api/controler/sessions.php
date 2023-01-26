@@ -53,7 +53,7 @@ if (isset($_GET['sessionid'])) {
     $password = $jsonData->password;
 
     try {
-        $query = "SELECT id, fullname, username, password, useractive, loginattempts FROM users WHERE username='$username'";
+        $query = "SELECT id, fullname, username, password, useractive, loginattempts FROM user WHERE username='$username'";
         $result = $conn->query($query);
         $rowCount = mysqli_num_rows($result);
         if ($rowCount === 0) {
@@ -76,7 +76,7 @@ if (isset($_GET['sessionid'])) {
 
         if (!password_verify($password, $db_password)) {
             //implementirati loginattempts
-            $query = "UPDATE tblusers SET loginattempts = $db_loginattempts +1 WHERE  id='$db_id'";
+            $query = "UPDATE user SET loginattempts = $db_loginattempts +1 WHERE  id='$db_id'";
             $result = $conn->query($query);
 
             $response = new Response();
@@ -105,19 +105,19 @@ if (isset($_GET['sessionid'])) {
     }
     try {
         //vracamo loginattempts na 0 kada se uloguje user
-        $query = "UPDATE tblusers SET loginattempts = 0 WHERE id=$db_id";
+        $query = "UPDATE user SET loginattempts = 0 WHERE id=$db_id";
         $conn->query($query);
 
         //kreiramo sessiju
-        $query = "INSERT INTO tblsessions (userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry) VALUES ($db_id, '$accesstoken', DATE_ADD(now(), INTERVAL $access_expiry SECOND), '$refreshtoken', DATE_ADD(now(), INTERVAL $refresh_expiry SECOND))";
+        $query = "INSERT INTO sessions (userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry) VALUES ($db_id, '$accesstoken', DATE_ADD(now(), INTERVAL $access_expiry SECOND), '$refreshtoken', DATE_ADD(now(), INTERVAL $refresh_expiry SECOND))";
         $conn->query($query);
 
         $last_id = $conn->insert_id; //pronalazenje id sesije koja je poslednja dodata
 
         $returnData = array();
         $returnData['session_id'] = intval($last_id);
-        $returnData['accesstoken'] = intval($accesstoken);
-        $returnData['refreshtoken'] = intval($refreshtoken);
+        $returnData['accesstoken'] = $accesstoken;
+        $returnData['refreshtoken'] = $refreshtoken;
 
         $response = new Response();
         $response->setHttpStatusCode(201);
