@@ -2,11 +2,14 @@
 //PRIKAZI SVE
 
 $("#prikaziSve").submit(function (e) {
-    //provera da li je prikazi sve zapoceto
+    
+    // da sprecimo refresh stranice nakon submita forme
     e.preventDefault();
+    //provera da li je prikazi sve zapoceto
+    
     //clg
     console.log("Prikazi sve zapoceto...")
-    //request je tipa jqxhr
+    //request je tipa jqXHR - jquery XmlHttpRequest - povratna vrednost funkcije ajax
     request=$.ajax({
         type:"get",
         url: "http://localhost/undp8/ajax/taskapi/tasks",
@@ -68,6 +71,34 @@ $("#dodaj").submit(function (e) {
     })
 });
 
+//DELETE
+$("#obrisi").click(function (event) {
+    event.preventDefault()
+    console.log("Obrisi je pokrenuto.")
+  
+    // selektovanje označenog taska putem radio-buttona
+    const checkedInput = $("input[type=radio]:checked")
+    // vrednost inputa je zapravo id taska
+    console.log(checkedInput.val())
+  
+    request = $.ajax({
+      url: "http://localhost/undp/ajax/task-api/tasks/" + checkedInput.val(),
+      type: "delete",
+    })
+  
+    request.done(function (response, textStatus, jqXHR) {
+      console.log(response)
+  
+      // ukloniti najbliži red čekiranom input polju (iz tabele sa fronta skloniti obrisani task)
+      checkedInput.closest("tr").remove()
+    })
+  
+    request.fail(function (jqXHR, textStatus, errorThrown) {
+      console.error("Sledeca greska se desila: " + textStatus, errorThrown)
+      console.log(jqXHR)
+    })
+  })
+  
 function dodajRed(rezultat) { 
     red=`
             <tr>
