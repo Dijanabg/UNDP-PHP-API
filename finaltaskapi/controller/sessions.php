@@ -90,7 +90,7 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
       $response->send();
       exit;
     }
-
+ 
     $rawPatchdata = file_get_contents('php://input');
 
     if(!$jsonData = json_decode($rawPatchdata)) {
@@ -119,7 +119,7 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 // prihvatanje usera za prosledjeni id sesije, access i refresh token
 // kreirati upit za prihvatanje user podataka iz prosledjenog access i refresh token-a 
         //$query = "SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accesstoken, refreshtoken, useractive, loginattempts, accessexpiry, refreshexpiry from tblsessions, tblusers where tblusers.id = tblsessions.userid and tblsessions.id = sessionid and tblsessions.accesstoken = tblusers.accesstoken and tblsessions.refreshtoken = tblusers.refreshtoken';
-        $query="SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accessexpiry, loginattempts FROM tblusers, tblsessions WHERE tblsessions.userid = tblusers.id AND sessionid = $sessionid";
+        $query="SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry, loginattempts FROM tblusers, tblsessions WHERE tblsessions.userid = tblusers.id AND sessionid = $sessionid AND tblsessions.accesstoken = $accesstoken and tblsessions.refreshtoken = $refreshtoken";
         $result = $conn->query($query);
   
         $rowCount = $result->num_rows;
@@ -190,7 +190,7 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         
         //$query = "UPDATE tblsessions SET accesstoken = '$accesstoken', accessexpiry = DATE_ADD(NOW(), INTERVAL $accessexpiry_seconds SECOND), refreshtoken = $refreshtoken, refreshexpiry = date_add(NOW(), INTERVAL $refreshexpiry_seconds SECOND) where id = $sessionid and userid = $db_userid and accesstoken = $returnedaccesstoken and refreshtoken = $returnedrefreshtoken');
         // azurirati broj redova - trebalo bi da bude 1
-        $query = "UPDATE tblsessions SET accesstoken = $accesstoken, accessexpiry = DATE_ADD(NOW(), INTERVAL $accessexpiry_seconds SECOND)";
+        $query = "UPDATE tblsessions SET accesstoken = $accesstoken, accessexpiry = DATE_ADD(NOW(), INTERVAL $accessexpiry_seconds SECOND, refreshtoken = $refreshtoken, refreshexpiry = date_add(NOW(), INTERVAL $refreshexpiry_seconds SECOND) where id = $sessionid and accesstoken = $returned_accesstoken and refreshtoken = $returned_refreshtoken)";
         $result = $conn->query($query);
         $rowCount = mysqli_num_rows($result);
         //$rowCount = $query->rowCount();

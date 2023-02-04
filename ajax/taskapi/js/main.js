@@ -34,11 +34,11 @@ $("#prikaziSve").submit(function (e) {
 
 ///DODAVANJE NOVOG TASKA
 
-$("#dodaj").submit(function (e) { 
+$("#inserttask").click(function (e) { 
     e.preventDefault();
     console.log("Dodaj novi task zapoceto...")
 
-    const $form=$(this);
+    const $form=$(this).closest("form")
     // console.log($form);
 
     // let obj = $form.serializeArray();
@@ -61,9 +61,11 @@ $("#dodaj").submit(function (e) {
        data: objekatJSON
     });
     request.done(function(response, textStatus, jqXHR){
+        console.log(response)
         rezultat=response.data.task
         console.log(rezultat)
         dodajRed(rezultat)
+        $form[0].reset() //da se resetuje nakon dodavanja novog taska
     })
     request.fail(function(jqXHR, textStatus,errorThrown){
         console.log("Desila se sledeca greska: " + textStatus, errorThrown)
@@ -72,8 +74,8 @@ $("#dodaj").submit(function (e) {
 });
 
 //DELETE
-$("#obrisi").click(function (event) {
-    event.preventDefault()
+$("#obrisi").click(function (e) {
+    e.preventDefault()
     console.log("Obrisi je pokrenuto.")
   
     // selektovanje označenog taska putem radio-buttona
@@ -82,15 +84,15 @@ $("#obrisi").click(function (event) {
     console.log(checkedInput.val())
   
     request = $.ajax({
-      url: "http://localhost/undp/ajax/task-api/tasks/" + checkedInput.val(),
-      type: "delete",
+      url: "http://localhost/undp8/ajax/taskapi/tasks/" + checkedInput.val(),
+      type: "delete"
     })
   
     request.done(function (response, textStatus, jqXHR) {
-      console.log(response)
-  
+      console.log(response.messages)
+  alert(response.messages[0])
       // ukloniti najbliži red čekiranom input polju (iz tabele sa fronta skloniti obrisani task)
-      checkedInput.closest("tr").remove()
+      checkedInput.closest("tr").remove()//front brisanje iz tabele
     })
   
     request.fail(function (jqXHR, textStatus, errorThrown) {
@@ -98,7 +100,87 @@ $("#obrisi").click(function (event) {
       console.log(jqXHR)
     })
   })
-  
+
+// 4. Azuriranje patch/update
+//4.1 popuni formu sa vrednostima selektovanog taska
+$("#izmeni").click(function (e) {
+    e.preventDefault()
+    
+    const task = $("input[type=radio]:checked")
+    var taskid = task.val()
+
+    console.log("Izmeni je pokrenuto....")
+    console.log("taks za azuriranje> "+taskid)
+
+    $.getJSON("http://localhost/undp8/ajax/taskapi/tasks/"+taskid,
+    function (response) {
+        $("#taskid").val(taskid)
+        $("#taskid").show()
+        $("#inserttask").hide()
+        $("#updatetask").show()
+
+        console.log("Odgovor iz get JSON")
+        console.log(response)
+
+        $("#title").val(response.data.tasks[0].title)
+        $("#description").val(response.data.tasks[0].description)
+        $("#completed").val(response.data.tasks[0].completed)
+        
+    })
+});
+$("#updatetask").click(function (e) { 
+    e.preventDefault();
+    console.log("Updating task...")
+
+    const $form = $(this).closest("form")
+    console.log($form)
+
+    let obj = $form.serializeArray()
+    console.log(obj)
+    //u slucaju da imamo disabled a ne readonly dobije 3 polja samo serilizacijom
+    let objekat = obj.reduce(function(json, {name, value}){
+        json[name]=value
+        return json
+    },{})
+    objekat.id = $("#taskid").val() //ovo mozemo da zakomentarisemo ako je readonly id
+    console.log(objekat)
+
+    const objJSON = JSON.stringify(objekat)
+
+    request=$ajax({
+        contentType:"application/json",
+        url: "http://localhost/undp8/ajax/taskapi/tasks/"+objekat.id,
+        type:"patch",
+        data: objJSON,
+    })
+    request.done(function(res, textStatus, jqXHR){
+        console.log(res.data.task[0])
+        $form[0].reset()
+        $("#taskid").hide()
+        $("#inserttask").show()
+        $("#updatetask").hide()
+
+        izmeniRed(res.data.task[0])
+    })
+    request.fail(function (jqXHR, textStatus, errorThrown) {
+        console.error("Sledeca greska se desila: " + textStatus, errorThrown)
+        console.log(jqXHR)
+    })
+});
+    
+
+
+
+
+
+function izmeniRed(rezultat) {
+    const redradio = $("input[type=radio]=checked")
+    const red = redradio.closest("tr")
+    red.children()[0].textContent = rezultat.title
+    red.children()[1].textContent = rezultat.description
+    
+}
+
 function dodajRed(rezultat) { 
     red=`
             <tr>

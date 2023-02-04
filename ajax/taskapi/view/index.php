@@ -23,12 +23,14 @@
     <div class="search-wrapper">
         <!-- dodavanje novog taska -->
         <form id="dodaj">
+            <input id="taskid" type="text" name="taskid" disabled hidden class="search-box" />
             <input id="title" type="text" name="title" required class="search-box" placeholder="Enter title" />
             <input id="description" type="text" name="description" required class="search-box"
                 placeholder="Enter description" />
             <input id="completed" type="text" name="completed" required class="search-box" placeholder="Enter Y/N" />
             <button class="close-icon" type="reset"></button>
-            <button type="submit">Insert </button>
+            <button type="submit" id="inserttask">Insert </button>
+            <button type="submit" id="updatetask" hidden >Update </button>
         </form>
     </div>
 
@@ -51,6 +53,7 @@
     </div>
     <div>
         <button id="obrisi">Obrisi</button>
+        <button id="izmeni">Izmeni</button>
     </div>
 
 
