@@ -119,7 +119,9 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 // prihvatanje usera za prosledjeni id sesije, access i refresh token
 // kreirati upit za prihvatanje user podataka iz prosledjenog access i refresh token-a 
         //$query = "SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accesstoken, refreshtoken, useractive, loginattempts, accessexpiry, refreshexpiry from tblsessions, tblusers where tblusers.id = tblsessions.userid and tblsessions.id = sessionid and tblsessions.accesstoken = tblusers.accesstoken and tblsessions.refreshtoken = tblusers.refreshtoken';
-        $query="SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry, loginattempts FROM tblusers, tblsessions WHERE tblsessions.userid = tblusers.id AND sessionid = $sessionid AND tblsessions.accesstoken = $accesstoken and tblsessions.refreshtoken = $refreshtoken";
+        //$query="SELECT tblsessions.id as sessionid, tblsessions.userid as userid, accesstoken, accessexpiry, refreshtoken, refreshexpiry, loginattempts FROM tblusers, tblsessions WHERE tblsessions.userid = tblusers.id AND sessionid = $sessionid AND tblsessions.accesstoken = $accesstoken and tblsessions.refreshtoken = $refreshtoken";
+        
+        $query= "SELECT sessionid, accesstoken, accessexpiry, refreshtoken, refreshexpiry FROM tblsessions WHERE accesstoken = $accesstoken and refreshtoken = $refreshtoken";
         $result = $conn->query($query);
   
         $rowCount = $result->num_rows;
@@ -145,24 +147,24 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         $returned_accessexpiry = $row['accessexpiry'];
         $returned_refreshexpiry = $row['refreshexpiry'];
 // provera da li je nalog aktivan
-        if($returned_useractive != 'Y') {
-          $response = new Response();
-          $response->setHttpStatusCode(401);
-          $response->setSuccess(false);
-          $response->addMessage("User account is not active");
-          $response->send();
-          exit;
-        }
+        // if($returned_useractive != 'Y') {
+        //   $response = new Response();
+        //   $response->setHttpStatusCode(401);
+        //   $response->setSuccess(false);
+        //   $response->addMessage("User account is not active");
+        //   $response->send();
+        //   exit;
+        // }
   
 // provera da li je nalog zakljucan
-        if($returned_loginattempts >= 3) {
-          $response = new Response();
-          $response->setHttpStatusCode(401);
-          $response->setSuccess(false);
-          $response->addMessage("User account is currently locked out");
-          $response->send();
-          exit;
-        }
+        // if($returned_loginattempts >= 3) {
+        //   $response = new Response();
+        //   $response->setHttpStatusCode(401);
+        //   $response->setSuccess(false);
+        //   $response->addMessage("User account is currently locked out");
+        //   $response->send();
+        //   exit;
+        // }
   
 // provera da li je refresh token istekao
         if(strtotime($returned_refreshexpiry) < time()) {
@@ -190,7 +192,7 @@ elseif($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         
         //$query = "UPDATE tblsessions SET accesstoken = '$accesstoken', accessexpiry = DATE_ADD(NOW(), INTERVAL $accessexpiry_seconds SECOND), refreshtoken = $refreshtoken, refreshexpiry = date_add(NOW(), INTERVAL $refreshexpiry_seconds SECOND) where id = $sessionid and userid = $db_userid and accesstoken = $returnedaccesstoken and refreshtoken = $returnedrefreshtoken');
         // azurirati broj redova - trebalo bi da bude 1
-        $query = "UPDATE tblsessions SET accesstoken = $accesstoken, accessexpiry = DATE_ADD(NOW(), INTERVAL $accessexpiry_seconds SECOND, refreshtoken = $refreshtoken, refreshexpiry = date_add(NOW(), INTERVAL $refreshexpiry_seconds SECOND) where id = $sessionid and accesstoken = $returned_accesstoken and refreshtoken = $returned_refreshtoken)";
+        $query = "UPDATE tblsessions SET accesstoken = '$accesstoken', accessexpiry = DATE_ADD(NOW(), INTERVAL '$accessexpiry_seconds' SECOND, refreshtoken = '$refreshtoken', refreshexpiry = date_add(NOW(), INTERVAL '$refreshexpiry_seconds' SECOND) where id = $sessionid and accesstoken = '$returned_accesstoken' and refreshtoken = '$returned_refreshtoken') ";
         $result = $conn->query($query);
         $rowCount = mysqli_num_rows($result);
         //$rowCount = $query->rowCount();
